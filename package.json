@@ -1,0 +1,22 @@
+{
+  "name": "miraculous-undo",
+  "version": "0.1.0",
+  "description": "simple and miraculous",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine --config=jasmine.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cztamas/undoable.git"
+  },
+  "author": "cztamas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cztamas/undoable/issues"
+  },
+  "homepage": "https://github.com/cztamas/undoable#readme",
+  "devDependencies": {
+    "jasmine": "^3.1.0"
+  }
+}
