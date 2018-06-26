@@ -24,6 +24,7 @@ module.exports = {
 	enable: enable,
 	disable: disable,
 	clear: clear,
+	reset: reset,
 	configure: configure
 };
 
@@ -34,8 +35,17 @@ function insertToStack(item) {
 	}
 }
 
+function limitStack() {
+	if (this.length > stackLimit) {
+		this.length = stackLimit;
+	}
+}
+
 undoStack.insert = insertToStack.bind(undoStack);
+undoStack.checkLimit = limitStack.bind(undoStack);
+
 redoStack.insert = insertToStack.bind(redoStack);
+redoStack.checkLimit = limitStack.bind(redoStack);
 
 function applyUndo(item) {
 	item.undo();
@@ -48,7 +58,7 @@ function applyRedo(item) {
 function itemFromSession() {
 	const items = sessionStack.slice();
 	const reversed = items.slice().reverse();
-	
+
 	function undo() {
 		reversed.forEach(applyUndo);
 	}
@@ -71,11 +81,12 @@ function insert(item) {
 		error("Invalid item");
 		return;
 	}
+	redoStack.length = 0;
 	if (sessions.length > 0) {
 		sessionStack.push(item);
 		return;
 	}
-	undoStack.push(item);
+	undoStack.insert(item);
 }
 
 function undo() {
@@ -154,12 +165,19 @@ function rollBackSessions() {
 
 function configure(config) {
 	const limit = config.stackLimit;
-	if (limit) {
+	const throwError = config.shouldThrowError;
+
+	if (limit !== undefined) {
 		if (typeof limit !== "number" || parseInt(limit, 10) !== limit || limit <= 0) {
 			error("Invalid stackLimit value: " + limit);
 		} else {
 			stackLimit = limit;
+			undoStack.checkLimit();
+			redoStack.checkLimit();
 		}
+	}
+	if (throwError !== undefined) {
+		shouldThrowError = throwError;
 	}
 }
 
@@ -176,6 +194,11 @@ function clear() {
 	sessionStack.length = 0;
 	undoStack.length = 0;
 	redoStack.length = 0;
+}
+
+function reset() {
+	clear();
+	stackLimit = defaultStackLimit;
 }
 
 function error(message) {

@@ -4,7 +4,8 @@
   "description": "simple and miraculous",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover node_modules/jasmine/bin/jasmine.js -- --config=jasmine.json"
+    "test": "istanbul cover node_modules/jasmine/bin/jasmine.js -- --config=jasmine.json",
+    "test:jasmine": "jasmine --config=jasmine.json"
   },
   "repository": {
     "type": "git",
