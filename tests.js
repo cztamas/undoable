@@ -18,6 +18,7 @@ describe("undoable tests", () => {
 	beforeEach(() => {
 		testString = "";
 		undoable.reset();
+		undoable.enable();
 	});
 
 	describe("basic undo/redo", () => {
@@ -112,5 +113,172 @@ describe("undoable tests", () => {
 		undoable.undo();
 		undoable.undo();
 		expect(testString).toBe("3");
+		undoable.insert({
+			undo: f1,
+			redo: f2
+		});
+		undoable.insert({
+			undo: f5,
+			redo: f6
+		});
+		undoable.undo();
+		undoable.undo();
+		expect(testString).toBe("35");
+	});
+
+	describe("error handling", () => {
+		beforeEach(() => {
+			undoable.configure({
+				throwError: true
+			});
+		});
+
+		it("invalid stack limit", () => {
+			expect(() => undoable.configure({
+				stackLimit: "beer"
+			})).toThrow();
+		});
+
+		it("insert invalid item", () => {
+			expect(() => {
+				undoable.insert();
+			}).toThrow();
+			expect(() => {
+				undoable.insert({});
+			}).toThrow();
+			expect(() => {
+				undoable.insert({
+					undo: 42
+				});
+			}).toThrow();
+			expect(() => {
+				undoable.insert({
+					undo: () => {},
+					redo: 137
+				});
+			}).toThrow();
+		});
+
+		it("throwing errors can be disabled", () => {
+			undoable.configure({
+				throwError: false
+			});
+			expect(() => {
+				undoable.insert();
+			}).not.toThrow();
+		});
+
+		it("closing a session twice", () => {
+			const session = undoable.startSession();
+			session.close();
+			expect(() => session.close()).toThrow();
+		});
+	});
+
+	describe("sessions", () => {
+		beforeEach(() => {
+			undoable.configure({
+				throwError: true
+			});
+		});
+
+		it("basic session handling", () => {
+			const session = undoable.startSession();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+			undoable.insert({
+				undo: f3,
+				redo: f4
+			});
+			session.close();
+			undoable.undo();
+			expect(testString).toBe("31");
+			undoable.undo();
+			expect(testString).toBe("31");
+			undoable.redo();
+			expect(testString).toBe("3124");
+			undoable.redo();
+			expect(testString).toBe("3124");
+		});
+
+		it("cannot undo/redo during an open session", () => {
+			const session = undoable.startSession();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+
+			expect(() => undoable.undo()).toThrow();
+			expect(() => undoable.redo()).toThrow();
+			
+			undoable.configure({
+				throwError: false
+			});
+
+			undoable.undo();
+			undoable.redo();
+
+			expect(testString).toBe("");
+			
+			undoable.configure({
+				throwError: true
+			});
+
+			session.close();
+			expect(() => undoable.undo()).not.toThrow();
+			expect(() => undoable.redo()).not.toThrow();
+		});
+
+		it("roll back a session", () => {
+			undoable.startSession();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+			undoable.insert({
+				undo: f3,
+				redo: f4
+			});
+			undoable.rollbackSessions();
+			expect(testString).toBe("31");
+			undoable.undo();
+			undoable.redo();
+			expect(testString).toBe("31");
+		});
+	});
+
+	describe("enable/disable", () => {
+		it("can be disabled", () => {
+			undoable.disable();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+			undoable.undo();
+			undoable.redo();
+			expect(testString).toBe("");
+		});
+
+		it("can be enabled again", () => {
+			undoable.disable();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+			undoable.undo();
+			undoable.redo();
+			expect(testString).toBe("");
+
+			undoable.enable();
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+			undoable.undo();
+			undoable.redo();
+			expect(testString).toBe("12");
+		});
 	});
 });

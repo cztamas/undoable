@@ -1,6 +1,7 @@
 "use strict";
 
 const defaultStackLimit = 20;
+const defaultThrowError = false;
 
 const undoStack = [];
 const redoStack = [];
@@ -10,7 +11,7 @@ const sessionStack = [];
 
 let stackLimit = defaultStackLimit;
 // Whether to throw error or just log invalid operations...
-let shouldThrowError = false;
+let shouldThrowError = defaultThrowError;
 let enabled = true;
 let processingUndo = false;
 
@@ -165,7 +166,7 @@ function rollBackSessions() {
 
 function configure(config) {
 	const limit = config.stackLimit;
-	const throwError = config.shouldThrowError;
+	const throwError = config.throwError;
 
 	if (limit !== undefined) {
 		if (typeof limit !== "number" || parseInt(limit, 10) !== limit || limit <= 0) {
@@ -199,6 +200,7 @@ function clear() {
 function reset() {
 	clear();
 	stackLimit = defaultStackLimit;
+	shouldThrowError = defaultThrowError;
 }
 
 function error(message) {
