@@ -52,7 +52,7 @@ This way, the change of border-top and border-bottom will be undoed and redoed t
 
 
 ## Event listeners
-You can register and deregister listeners for the undo and redo operations - these will be called with an object containing the undo/redo queue length - like `{ undoQueueLength: 1, redoQueueLength: 3 }`.
+You can register and deregister listeners for the undo and redo operations - these will be called with an object containing the current undo/redo queue length (after the operation!) - like `{ undoQueueLength: 1, redoQueueLength: 3 }`.
 E.g.
 ```javascript
 // These will be called after every undo and redo operation, respectively...
