@@ -1,6 +1,6 @@
 {
   "name": "miraculous-undo",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Very simple and very general undo-redo tool.",
   "keywords": ["undo", "redo"],
   "main": "index.js",

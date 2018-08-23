@@ -8,6 +8,10 @@ const redoStack = [];
 // the currently open sessions...
 const sessions = [];
 const sessionStack = [];
+const eventHandlers = {
+	undo: [],
+	redo: []
+};
 
 let stackLimit = defaultStackLimit;
 // Whether to throw error or just log invalid operations...
@@ -16,17 +20,20 @@ let enabled = true;
 let processingUndo = false;
 
 module.exports = {
-	undo: undo,
-	redo: redo,
-	insert: insert,
-	startSession: startSession,
-	rollBackSessions: rollBackSessions,
+	undo,
+	redo,
+	insert,
+	startSession,
+	rollBackSessions,
 	rollbackSessions: rollBackSessions,
-	enable: enable,
-	disable: disable,
-	clear: clear,
-	reset: reset,
-	configure: configure
+	enable,
+	disable,
+	clear,
+	reset,
+	configure,
+	registerListener,
+	on: registerListener,
+	deregisterListener
 };
 
 function insertToStack(item) {
@@ -107,6 +114,10 @@ function undo() {
 	processingUndo = false;
 
 	redoStack.insert(item);
+	callHandlers("undo", {
+		undoQueueLength: undoStack.length,
+		redoQueueLength: redoStack.length
+	});
 }
 
 function redo() {
@@ -126,6 +137,10 @@ function redo() {
 	processingUndo = false;
 
 	undoStack.insert(item);
+	callHandlers("redo", {
+		undoQueueLength: undoStack.length,
+		redoQueueLength: redoStack.length
+	});
 }
 
 function startSession() {
@@ -212,4 +227,37 @@ function error(message) {
 
 function allowed() {
 	return enabled && !processingUndo;
+}
+
+function registerListener(eventName, handler) {
+	if (!Array.isArray(eventHandlers[eventName])) {
+		error(`Unknown event type: ${eventName}`);
+		return;
+	}
+	const handlers = eventHandlers[eventName];
+	if (handlers.includes(handler)) {
+		return;
+	}
+	handlers.push(handler);
+}
+
+function deregisterListener(eventName, handler) {
+	if (!Array.isArray(eventHandlers[eventName])) {
+		error(`Unknown event type: ${eventName}`);
+		return;
+	}
+	const handlers = eventHandlers[eventName];
+	const index = handlers.indexOf(handler);
+	if (index !== -1) {
+		handlers.splice(index, 1);
+	}
+}
+
+function callHandlers(eventName, ...data) {
+	if (!Array.isArray(eventHandlers[eventName])) {
+		error(`Unknown event type: ${eventName}`);
+		return;
+	}
+	const handlers = eventHandlers[eventName];
+	handlers.forEach(handler => handler(...data));
 }

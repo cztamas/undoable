@@ -2,7 +2,7 @@
 
 Simple JS undo-redo utility for simple applications.
 
-It manages an undo-redo stack, but knows nothing about your application state. This makes it extremely general, but suitably only for simple use cases.
+It manages an undo-redo stack, but knows nothing about your application state. This makes it extremely general, but suitable only for simple use cases.
 
 ## Basic usage
 ```javascript
@@ -50,3 +50,15 @@ session.close();
 
 This way, the change of border-top and border-bottom will be undoed and redoed together, appearing as one operation to the user.
 
+
+## Event listeners
+You can register and deregister listeners for the undo and redo operations - these will be called with an object containing the undo/redo queue length - like `{ undoQueueLength: 1, redoQueueLength: 3 }`.
+E.g.
+```javascript
+// These will be called after every undo and redo operation, respectively...
+undoable.on("undo", undoHandler);
+undoable.on("redo", redoHandler);
+
+// This deregisters the listener.
+undoable.deregisterListener("undo", undoHandler);
+```

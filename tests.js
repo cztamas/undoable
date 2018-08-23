@@ -281,4 +281,67 @@ describe("undoable tests", () => {
 			expect(testString).toBe("12");
 		});
 	});
+
+	describe("event listeners", () => {
+		it("calls the registered event listeners", () => {
+			const undoListener = jasmine.createSpy("undoListener");
+			const redoListener = jasmine.createSpy("redoListener");
+			undoable.on("undo", undoListener);	
+			undoable.on("redo", redoListener);
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+
+			undoable.undo();
+			expect(undoListener).toHaveBeenCalledTimes(1);
+			expect(redoListener).toHaveBeenCalledTimes(0);
+			expect(undoListener.calls.argsFor(0)).toEqual([{
+				undoQueueLength: 0,
+				redoQueueLength: 1
+			}]);
+
+			undoable.redo();
+			expect(undoListener).toHaveBeenCalledTimes(1);
+			expect(redoListener).toHaveBeenCalledTimes(1);
+			expect(redoListener.calls.argsFor(0)).toEqual([{
+				undoQueueLength: 1,
+				redoQueueLength: 0
+			}]);
+		});
+
+		it("registering a listener more than once will not call it multiple times", () => {
+			const undoListener = jasmine.createSpy("undoListener");
+			undoable.on("undo", undoListener);	
+			undoable.on("undo", undoListener);
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+
+			undoable.undo();
+
+			expect(undoListener).toHaveBeenCalledTimes(1);
+		});
+
+		it("event listeners can be deregistered", () => {
+			const undoListener = jasmine.createSpy("undoListener");
+			const redoListener = jasmine.createSpy("redoListener");
+			undoable.on("undo", undoListener);	
+			undoable.on("redo", redoListener);
+			undoable.insert({
+				undo: f1,
+				redo: f2
+			});
+
+			undoable.deregisterListener("undo", undoListener);
+			undoable.deregisterListener("redo", redoListener);
+
+			undoable.undo();
+			undoable.redo();
+
+			expect(undoListener).toHaveBeenCalledTimes(0);
+			expect(redoListener).toHaveBeenCalledTimes(0);
+		});
+	});
 });
